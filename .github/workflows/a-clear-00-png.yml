@@ -1,0 +1,60 @@
+name: Clear & Regenerate 00-PNG
+
+on:
+  workflow_dispatch:  # فقط اجرای دستی
+
+permissions:
+  contents: write     # برای اینکه workflow بتونه commit/push کنه
+
+concurrency:
+  group: clear-png
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install canvas dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev librsvg2-dev
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Run Clear & Regenerate script
+        run: node scripts/clear-00-png.mjs
+
+      - name: Stage modified PNGs
+        run: |
+          git config user.name 'selglo-bot'
+          git config user.email 'bot@selglo.com'
+          git ls-files -m "daily/**/*.png" | xargs -r git add
+          if git diff --cached --quiet; then
+            echo "No PNG changes to commit"
+            exit 0
+          fi
+          echo "🔍 Files to commit:"
+          git status
+          git diff --cached
+
+      - name: Pull and rebase before push
+        run: |
+          git fetch origin main
+          git pull --rebase origin main
+        continue-on-error: true
+
+      - name: Commit and push PNG updates
+        run: |
+          git commit -m "Clear & regenerate PNGs"
+          git push origin HEAD:main
