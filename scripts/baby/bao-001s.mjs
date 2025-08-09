@@ -11,8 +11,8 @@ const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother'
 
 // ===== تنظیمات شما (بر حسب CSS px) =====
 const VIEWPORT_WIDTH_CSS = 90;     // عرض     
-const startY_css = 3;              // فاصله از بالا (CSS px)
-const trimRight_css = 70;           // مقدار حاشیه‌ای که از چپ حذف می‌شود (CSS px)
+const startY_css = 2;              // فاصله از بالا (CSS px)
+const trimRight_css = 60;           // مقدار حاشیه‌ای که از چپ حذف می‌شود (CSS px)
 const itemCount = 100;              // تعداد آیتم‌های برش )
 
 // =======================================
