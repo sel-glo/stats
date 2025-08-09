@@ -10,11 +10,11 @@ const INPUT_PATH = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother'
 const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother', 'sliced');
 
 // ===== تنظیمات شما (بر حسب CSS px) =====
-const startX_css = 0;             // فاصله از چپ (CSS px) برای حذف ستون اول
-const VIEWPORT_WIDTH_CSS = 10;    // عرض بخشی که می‌خواهیم نگه داریم (CSS px)
-const startY_css = 1;              // فاصله از بالا (CSS px)
-const itemCount = 100;             // تعداد آیتم‌های برش
-
+const VIEWPORT_WIDTH_CSS = 390;   // عرض کل در اسکرین‌شات (همون که در puppeteer ست شده)
+const startY_css = 1;             // فاصله از بالا
+const startX_css = 0;             // فاصله از چپ (برای حذف حاشیه چپ)
+const endX_css = 350;              // تا این ستون (CSS px) برش بزن؛ بقیه حذف شود
+const itemCount = 100;            // تعداد آیتم‌های برش
 // =======================================
 
 if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -22,13 +22,14 @@ if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 (async () => {
   const image = await loadImage(INPUT_PATH);
 
-  // تخمین DPR از عرض خروجی اسکرین‌شات
-  const DPR = image.width / (startX_css + VIEWPORT_WIDTH_CSS);
+  // محاسبه DPR (برای تبدیل CSS px به پیکسل واقعی تصویر)
+  const DPR = image.width / VIEWPORT_WIDTH_CSS;
 
-  const startX = Math.round(startX_css * DPR);
   const startY = Math.round(startY_css * DPR);
-  const cropWidth = Math.round(VIEWPORT_WIDTH_CSS * DPR);
+  const startX = Math.round(startX_css * DPR);
+  const endX = Math.round(endX_css * DPR);
 
+  const cropWidth = endX - startX; // عرض واقعی بعد از برش
   const totalHeight = image.height - startY;
   const baseStep = Math.floor(totalHeight / itemCount);
 
@@ -40,13 +41,12 @@ if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
     const canvas = createCanvas(cropWidth, thisHeight);
     const ctx = canvas.getContext('2d');
 
-    // از startX تا cropWidth ببُر
     ctx.drawImage(image, startX, sy, cropWidth, thisHeight, 0, 0, cropWidth, thisHeight);
 
     const buffer = canvas.toBuffer('image/png');
     const outputFileName = `bao001-${String(i + 1).padStart(3, '0')}.png`;
     fs.writeFileSync(path.join(OUTPUT_DIR, outputFileName), buffer);
-    console.log(`✅ Created: ${outputFileName}  (DPR=${DPR.toFixed(2)}, x=${startX}, y=${sy}, w=${cropWidth}, h=${thisHeight})`);
+    console.log(`✅ Created: ${outputFileName} (DPR=${DPR.toFixed(2)}, x=${startX}, y=${sy}, w=${cropWidth}, h=${thisHeight})`);
   }
 })().catch(err => {
   console.error('❌ Slice error:', err);
