@@ -2,11 +2,12 @@ name: Split baby-bao-001.png
 
 on:
   workflow_dispatch:
-
   schedule:
-    - cron: '0 5 * * *'  # 08:00 صبح ترکیه (UTC 05:00)
+    - cron: '0 5 * * *'  # 08:00 صبح به وقت ترکیه (UTC 05:00)
 
-# جلوگیری از اجرای همزمان همه sliced ها
+permissions:
+  contents: write
+
 concurrency:
   group: split-sliced-queue
   cancel-in-progress: false
@@ -20,6 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -37,22 +39,45 @@ jobs:
       - name: Run bao-001s splitter script
         run: node scripts/baby/bao-001s.mjs
 
-      - name: Stage all changes before pull
-        run: |
-          git config user.name "selglo-bot"
-          git config user.email "bot@selglo.com"
-          git add -A
-
-      - name: Pull latest changes (avoid conflicts)
+      # ابتدا repo را با آخرین تغییرات main سینک کن تا تعارض پیش‌نیاد
+      - name: Pull latest changes (rebase)
         run: |
           git fetch origin main
           git pull --rebase origin main || true
 
-      - name: Commit and push sliced images
+      # فقط PNGهای sliced را استیج کن (نه node_modules و بقیه)
+      - name: Stage sliced images only
         run: |
+          git config user.name "selglo-bot"
+          git config user.email "bot@selglo.com"
+          git add -- ':(glob)daily/baby/babyother/sliced/*.png'
+
           if git diff --cached --quiet; then
-            echo "No sliced images to commit"
+            echo "✅ No sliced images to commit"
             exit 0
           fi
-          git commit -m "Auto-split: updated sliced images from bao-001.png"
-          git push origin HEAD:main
+
+          echo "🔍 Staged files:"
+          git diff --cached --name-only
+
+      - name: Commit and push with retry
+        run: |
+          git commit -m "Auto-split: update sliced images from bao-001.png" || exit 0
+
+          attempts=0
+          until [ $attempts -ge 3 ]
+          do
+            if git push origin HEAD:main; then
+              echo "✅ Push succeeded"
+              break
+            fi
+            attempts=$((attempts+1))
+            echo "⚠ Push failed (attempt $attempts). Rebase & retry..."
+            git fetch origin main
+            git pull --rebase origin main || true
+          done
+
+          if [ $attempts -ge 3 ]; then
+            echo "❌ Push failed after 3 attempts. Check branch protections/permissions."
+            exit 1
+          fi
