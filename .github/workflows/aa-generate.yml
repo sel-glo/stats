@@ -1,0 +1,63 @@
+name: Generate Daily Stats
+
+on:
+  workflow_dispatch:    # اجرای دستی
+  schedule:
+    - cron: '0 4 * * *' # هر روز 07:00 به وقت ترکیه (04:00 UTC)
+
+concurrency:
+  group: generate-daily-stats
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install canvas dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev librsvg2-dev
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Run stats generator script
+        run: node scripts/generator.js
+
+      - name: Stage modified PNG files
+        run: |
+          git config user.name 'selglo-bot'
+          git config user.email 'bot@selglo.com'
+          git ls-files -m "daily/**/*.png" | xargs -r git add
+          if git diff --cached --quiet; then
+            echo "✅ No PNG changes to commit"
+            exit 0
+          fi
+          echo "🔍 Files staged for commit:"
+          git status
+          git diff --cached
+
+      - name: Pull latest changes with rebase
+        run: |
+          git fetch origin main
+          git pull --rebase origin main || true
+
+      - name: Commit and push changes
+        run: |
+          git commit -m "Auto-update product stats images" || exit 0
+          git push origin HEAD:main || \
+          (echo "⚠ Push failed, retrying..." && \
+           git pull --rebase origin main && \
+           git push origin HEAD:main)
