@@ -10,7 +10,7 @@ const INPUT_PATH = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother'
 const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother', 'sliced');
 
 // ===== تنظیمات شما (بر حسب CSS px) =====
-const VIEWPORT_WIDTH_CSS = 90;     // عرض     
+const VIEWPORT_WIDTH_CSS = 10;     // عرض     
 const startY_css = 2;              // فاصله از بالا (CSS px)
 const trimRight_css = 10;           // مقدار حاشیه‌ای که از چپ حذف می‌شود (CSS px)
 const itemCount = 100;              // تعداد آیتم‌های برش )
