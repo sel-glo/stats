@@ -12,7 +12,7 @@ const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother'
 const startX = 0;
 const startY = 30;
 const cropWidth = 420;
-const cropHeight = 240;
+const cropHeight = 270;
 const itemCount = 10;
 
 if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
