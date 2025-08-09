@@ -11,8 +11,8 @@ const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother'
 
 // ===== تنظیمات شما (بر حسب CSS px) =====
 const startX_css = 0;             // فاصله از چپ (CSS px) برای حذف ستون اول
-const VIEWPORT_WIDTH_CSS = 30;    // عرض بخشی که می‌خواهیم نگه داریم (CSS px)
-const startY_css = 0;              // فاصله از بالا (CSS px)
+const VIEWPORT_WIDTH_CSS = 35;    // عرض بخشی که می‌خواهیم نگه داریم (CSS px)
+const startY_css = 1;              // فاصله از بالا (CSS px)
 const itemCount = 100;             // تعداد آیتم‌های برش
 
 // =======================================
