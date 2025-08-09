@@ -2,7 +2,7 @@
 # پاک‌سازی محتوای PNGهای داخل همه‌ی پوشه‌های sliced/ زیر daily/
 # اجرا: فقط دستی
 
-name: Clear Sliced PNGs
+name: Clear Sliced 100png
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
           node-version: '20'
 
       - name: Run sliced PNG cleaner script
-        run: node scripts/ac-clear-sliced-100png.mjs
+        run: node scripts/clear-sliced-100png.mjs
 
       - name: Stage cleared PNG changes
         run: |
