@@ -10,10 +10,9 @@ const INPUT_PATH = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother'
 const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother', 'sliced');
 
 // ===== تنظیمات شما (بر حسب CSS px) =====
-const VIEWPORT_WIDTH_CSS = 390;   // عرض کل در اسکرین‌شات (همون که در puppeteer ست شده)
 const startY_css = 1;             // فاصله از بالا
-const startX_css = 0;             // فاصله از چپ (برای حذف حاشیه چپ)
-const endX_css = 350;              // تا این ستون (CSS px) برش بزن؛ بقیه حذف شود
+const startX_css = 3;             // فاصله از چپ (برای حذف حاشیه چپ)
+const endX_css = 100;              // تا این ستون (CSS px) برش بزن؛ بقیه حذف شود
 const itemCount = 100;            // تعداد آیتم‌های برش
 // =======================================
 
