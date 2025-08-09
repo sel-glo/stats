@@ -1,0 +1,79 @@
+# .github/workflows/ac-clear-sliced-100png.yml
+# پاک‌سازی محتوای PNGهای داخل همه‌ی پوشه‌های sliced/ زیر daily/
+# اجرا: فقط دستی
+
+name: Clear Sliced PNGs
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: clear-sliced-100png
+  cancel-in-progress: false
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run sliced PNG cleaner script
+        run: node scripts/ac-clear-sliced-100png.mjs
+
+      - name: Stage cleared PNG changes
+        run: |
+          git config user.name 'selglo-bot'
+          git config user.email 'bot@selglo.com'
+          git config pull.rebase true
+
+          # فقط فایل‌های PNG داخل sliced را استیج کن
+          git add -A -- ':(glob)daily/**/sliced/*.png'
+
+          if git diff --cached --quiet; then
+            echo "✅ No PNG content changes to commit"
+            exit 0
+          fi
+
+          echo "🔍 Staged changes:"
+          git status
+          git diff --cached --name-status
+
+      - name: Rebase onto latest main
+        run: |
+          git fetch origin main
+          git pull --rebase origin main || (echo "⚠ Rebase failed; will retry during push" && true)
+
+      - name: Commit and resilient push (up to 3 tries)
+        run: |
+          git commit -m "Clear content of sliced PNG files" || true
+
+          attempts=0
+          until [ $attempts -ge 3 ]
+          do
+            if git push origin HEAD:main; then
+              echo "✅ Push succeeded"
+              break
+            fi
+            attempts=$((attempts+1))
+            echo "⚠ Push failed (attempt $attempts). Fetching/rebasing and retrying..."
+            git fetch origin main
+            git pull --rebase origin main || true
+          done
+
+          if [ $attempts -ge 3 ]; then
+            echo "❌ Push failed after 3 attempts. Please check branch protections/permissions."
+            exit 1
+          fi
