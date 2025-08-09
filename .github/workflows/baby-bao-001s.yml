@@ -4,15 +4,9 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: '0 5 * * *'  # 08:00 صبح به وقت ترکیه (UTC 05:00)
+    - cron: '0 5 * * *'  # 08:00 صبح ترکیه (UTC 05:00)
 
-  push:
-    paths:
-      - 'daily/baby/babyother/bao-001.png'
-      - 'scripts/baby/bao-001s.mjs'
-      - '.github/workflows/baby-bao-001s.yml'
-
-# جلوگیری از اجرای همزمان و در صورت تلاقی، منتظر ماندن
+# جلوگیری از اجرای همزمان همه sliced ها
 concurrency:
   group: split-sliced-queue
   cancel-in-progress: false
@@ -43,16 +37,19 @@ jobs:
       - name: Run bao-001s splitter script
         run: node scripts/baby/bao-001s.mjs
 
-      - name: Pull latest changes (avoid conflicts)
-        run: |
-          git fetch origin main
-          git pull --rebase origin main
-
-      - name: Commit and push sliced images
+      - name: Stage all changes before pull
         run: |
           git config user.name "selglo-bot"
           git config user.email "bot@selglo.com"
-          git add daily/baby/babyother/sliced/*.png
+          git add -A
+
+      - name: Pull latest changes (avoid conflicts)
+        run: |
+          git fetch origin main
+          git pull --rebase origin main || true
+
+      - name: Commit and push sliced images
+        run: |
           if git diff --cached --quiet; then
             echo "No sliced images to commit"
             exit 0
