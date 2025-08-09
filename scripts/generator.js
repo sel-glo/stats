@@ -243,7 +243,8 @@ function getAllHtmlFiles(dir, fileList = []) {
             <p><span class="icon">⭐️</span> <strong>${rating.toFixed(1)}</strong> out of 5</p>
             <p><span class="icon">📦</span> Sold: <strong>${sold}</strong> units</p>
             <p><span class="icon">❤️</span> Liked by <strong>${likes}</strong> customers</p>
-            <p><span class="icon">📊</span> Sell in last week: <strong>${weekly}</strong> more</p>
+            <p><span class="icon">📊</span> Sell in last week: <strong>${weekly}</strong> more</p>  
+            <span style="color: blue;">${index}</span>
           </${tag}>`;
         }
       );
