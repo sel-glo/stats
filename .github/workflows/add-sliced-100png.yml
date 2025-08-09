@@ -1,5 +1,5 @@
 # .github/workflows/add-sliced-100png.yml
-name: Generate Sliced 100 PNGs
+name: Add Sliced 100 png
 
 on:
   workflow_dispatch:  # فقط اجرای دستی
