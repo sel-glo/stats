@@ -1,0 +1,61 @@
+name: Split baby-bao-001.png
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: '0 5 * * *'  # 08:00 صبح به وقت ترکیه (UTC 05:00)
+
+  push:
+    paths:
+      - 'daily/baby/babyother/bao-001.png'
+      - 'scripts/baby/bao-001s.mjs'
+      - '.github/workflows/baby-bao-001s.yml'
+
+# جلوگیری از اجرای همزمان و در صورت تلاقی، منتظر ماندن
+concurrency:
+  group: split-sliced-queue
+  cancel-in-progress: false
+
+jobs:
+  split-baby-bao-001s-png:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install canvas dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+
+      - name: Install npm packages
+        run: npm install
+
+      - name: Run bao-001s splitter script
+        run: node scripts/baby/bao-001s.mjs
+
+      - name: Pull latest changes (avoid conflicts)
+        run: |
+          git fetch origin main
+          git pull --rebase origin main
+
+      - name: Commit and push sliced images
+        run: |
+          git config user.name "selglo-bot"
+          git config user.email "bot@selglo.com"
+          git add daily/baby/babyother/sliced/*.png
+          if git diff --cached --quiet; then
+            echo "No sliced images to commit"
+            exit 0
+          fi
+          git commit -m "Auto-split: updated sliced images from bao-001.png"
+          git push origin HEAD:main
