@@ -10,10 +10,10 @@ const INPUT_PATH = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother'
 const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother', 'sliced');
 
 // ===== تنظیمات شما (بر حسب CSS px) =====
-const VIEWPORT_WIDTH_CSS = 390;     // همون که در puppeteer ست کرده‌اید
-const startY_css = 30;              // فاصله از بالا (CSS px)
-const trimRight_css = 40;           // مقدار حاشیه‌ای که از راست حذف می‌شود (CSS px)
-const itemCount = 100;              // تعداد آیتم‌های قابل برش (10 یا 100)
+const VIEWPORT_WIDTH_CSS = 385;     // همون که در puppeteer ست کرده‌اید
+const startY_css = 0;              // فاصله از بالا (CSS px)
+const trimRight_css = 30;           // مقدار حاشیه‌ای که از راست حذف می‌شود (CSS px)
+const itemCount = 100;              // تعداد آیتم‌های برش )
 
 // =======================================
 
