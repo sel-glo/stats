@@ -28,10 +28,10 @@ jobs:
           node-version: '20'
 
       # اگر اسکریپت فقط فایل صفر‌بایتی می‌سازد، npm install لازم نیست
-      - name: Run generator (create 100 PNG placeholders under sliced/)
+      - name: Run generator (create 100 png placeholders under sliced/)
         run: node scripts/add-sliced-100png.mjs
 
-      - name: Stage sliced PNG changes (adds/mods/deletions)
+      - name: Stage sliced png changes (adds/mods/deletions)
         run: |
           git config user.name 'selglo-bot'
           git config user.email 'bot@selglo.com'
@@ -56,7 +56,7 @@ jobs:
 
       - name: Commit and resilient push (up to 3 tries)
         run: |
-          git commit -m "Generate sliced PNG placeholders" || true
+          git commit -m "Generate sliced png placeholders" || true
 
           attempts=0
           until [ $attempts -ge 3 ]
