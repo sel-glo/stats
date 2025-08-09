@@ -43,9 +43,9 @@ function clearPngFilesInSlicedDirs(dir) {
 
 try {
   clearPngFilesInSlicedDirs(ROOT_DIR);
-  console.log(`\n✅ All sliced PNG file contents cleared.`);
+  console.log(`\n✅ All sliced 100png file contents cleared.`);
   console.log(`📁 sliced dirs: ${slicedDirCount} | 🧹 PNGs cleared: ${clearedCount} | ⏭ skipped (non-PNG/dirs): ${skippedCount}`);
 } catch (err) {
-  console.error('❌ Error while clearing sliced PNGs:', err);
+  console.error('❌ Error while clearing sliced 100png:', err);
   process.exit(1);
 }
