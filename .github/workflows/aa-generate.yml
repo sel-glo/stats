@@ -1,9 +1,12 @@
 name: Generate Daily Stats
 
 on:
-  workflow_dispatch:    # اجرای دستی
+  workflow_dispatch:
   schedule:
-    - cron: '0 4 * * *' # هر روز 07:00 به وقت ترکیه (04:00 UTC)
+    - cron: '0 4 * * *'  # 07:00 TRT
+
+permissions:
+  contents: write   # ⬅️ ضروری برای push
 
 concurrency:
   group: generate-daily-stats
@@ -12,7 +15,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -45,7 +47,6 @@ jobs:
             echo "✅ No PNG changes to commit"
             exit 0
           fi
-          echo "🔍 Files staged for commit:"
           git status
           git diff --cached
 
