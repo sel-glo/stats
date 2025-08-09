@@ -113,7 +113,7 @@ function getAllHtmlFiles(dir, fileList = []) {
       // 6 گروه Vehicles
       case 'cr': groupOffset = 61000; targetDir = 'car'; groupName = 'vehicles'; break;
       case 'mt': groupOffset = 62000; targetDir = 'motorcycle'; groupName = 'vehicles'; break;
-      case 'bc': groupOffset = 63000; targetDir = 'bicycle'; groupName = 'vehicles'; break;
+      case 'by': groupOffset = 63000; targetDir = 'bicycle'; groupName = 'vehicles'; break;
       case 'so': groupOffset = 64000; targetDir = 'scooters'; groupName = 'vehicles'; break;
       case 'ti': groupOffset = 65000; targetDir = 'tires'; groupName = 'vehicles'; break;
       case 'in': groupOffset = 66000; targetDir = 'interiorparts'; groupName = 'vehicles'; break;
