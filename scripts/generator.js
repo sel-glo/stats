@@ -215,26 +215,38 @@ function getAllHtmlFiles(dir, fileList = []) {
     let htmlContent = fs.readFileSync(htmlPath, 'utf8');
     const seedBase = parseInt(fileName.match(/\d+/)?.[0] || '1');
 
-      htmlContent = htmlContent.replace(/<(div|article) class="product" id="(p\d+)">([\s\S]*?)<\/\1>/g, (match, tag, id) => {
-      const index = parseInt(id.slice(1));
-      const seed = groupOffset + seedBase * 100 + index;
+      htmlContent = htmlContent.replace(
+        /<(div|article) class="product" id="(p\d+)">([\s\S]*?)<\/\1>/g,
+        (match, tag, id) => {
+          const index = parseInt(id.slice(1));
+          const seed = groupOffset + seedBase * 100 + index;
 
-      const baseSold = 30 + (seed % 15);
-      const maxSold = 980;
-      const progress = (daysPassed % 180) / 180;
-      const sold = Math.floor(baseSold + (maxSold - baseSold) * progress);
+          const baseSold = 30 + (seed % 15);
+          const maxSold = 980;
+          const progress = (daysPassed % 180) / 180;
+          const sold = Math.floor(baseSold + (maxSold - baseSold) * progress);
 
-      const weekly = Math.min(Math.floor(sold / 4), Math.floor(10 + (sold % 10) + Math.cos(seed / 3 + dateFactor) * 2.5));
-      const likes = Math.min(750, Math.floor(sold * (0.6 + Math.sin((seed + dateFactor) / 11) * 0.1)));
-      const rating = Math.min(4.8, 3 + ((seed % 20) * 0.1 + Math.sin(seed + dateFactor / 10) * 0.2));
+          const weekly = Math.min(
+            Math.floor(sold / 4),
+            Math.floor(10 + (sold % 10) + Math.cos(seed / 3 + dateFactor) * 2.5)
+          );
+          const likes = Math.min(
+            750,
+            Math.floor(sold * (0.6 + Math.sin((seed + dateFactor) / 11) * 0.1))
+          );
+          const rating = Math.min(
+            4.8,
+            3 + ((seed % 20) * 0.1 + Math.sin(seed + dateFactor / 10) * 0.2)
+          );
 
-      return `<div class="product" id="${id}">
-        <p><span class="icon">⭐️</span> <strong>${rating.toFixed(1)}</strong> out of 5</p>
-        <p><span class="icon">📦</span> Sold: <strong>${sold}</strong> units</p>
-        <p><span class="icon">❤️</span> Liked by <strong>${likes}</strong> customers</p>
-        <p><span class="icon">📊</span> In the past 7 days, <strong>${weekly}</strong> more<br><span style="color: transparent;">---</span>people bought this product.</p>
-      </div>`;
-    });
+          return `<${tag} class="product" id="${id}">
+            <p><span class="icon">⭐️</span> <strong>${rating.toFixed(1)}</strong> out of 5</p>
+            <p><span class="icon">📦</span> Sold: <strong>${sold}</strong> units</p>
+            <p><span class="icon">❤️</span> Liked by <strong>${likes}</strong> customers</p>
+            <p><span class="icon">📊</span> Sell in last week: <strong>${weekly}</strong> more</p>
+          </${tag}>`;
+        }
+      );
 
     // ایجاد فایل موقت و رندر آن
     const tempPath = path.join(__dirname, 'temp.html');
@@ -245,6 +257,7 @@ function getAllHtmlFiles(dir, fileList = []) {
 
     // حذف فایل قبلی اگر وجود دارد
     if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+    await page.waitForSelector('.product');
 
     // گرفتن اسکرین‌شات و ذخیره
     await page.screenshot({
