@@ -1,4 +1,4 @@
-name: Clear PNG
+name: Clear Base png
 
 on:
   workflow_dispatch:  # فقط اجرای دستی
@@ -35,7 +35,7 @@ jobs:
         run: npm install
 
       - name: Run Clear & Regenerate script
-        run: node scripts/clear-png.mjs
+        run: node scripts/clear-base-png.mjs
 
       - name: Stage PNG changes (adds + mods + deletions)
         run: |
@@ -59,7 +59,7 @@ jobs:
       - name: Commit and resilient push (up to 3 tries)
         run: |
           # commit ممکن است از قبل وجود داشته باشد؛ اگر نبود می‌سازیم
-          git commit -m "Clear PNG" || true
+          git commit -m "Clear png" || true
 
           attempts=0
           until [ $attempts -ge 3 ]
