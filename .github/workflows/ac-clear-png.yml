@@ -1,0 +1,80 @@
+name: Clear PNG
+
+on:
+  workflow_dispatch:  # فقط اجرای دستی
+
+permissions:
+  contents: write
+
+concurrency:
+  group: clear-png
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install canvas dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev librsvg2-dev
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Run Clear & Regenerate script
+        run: node scripts/clear-png.mjs
+
+      - name: Stage PNG changes (adds + mods + deletions)
+        run: |
+          git config user.name 'selglo-bot'
+          git config user.email 'bot@selglo.com'
+          git config pull.rebase true
+          git add -A daily
+          if git diff --cached --quiet; then
+            echo "✅ No PNG changes to commit"
+            exit 0
+          fi
+          echo "🔍 Staged changes:"
+          git status
+          git diff --cached --name-status
+
+      - name: Rebase onto latest main (soft)
+        run: |
+          git fetch origin main
+          git rebase origin/main || (echo "⚠ Rebase had conflicts; aborting rebase and continuing with retry logic" && git rebase --abort || true)
+
+      - name: Commit and resilient push (up to 3 tries)
+        run: |
+          # commit ممکن است از قبل وجود داشته باشد؛ اگر نبود می‌سازیم
+          git commit -m "Clear PNG" || true
+
+          attempts=0
+          until [ $attempts -ge 3 ]
+          do
+            if git push origin HEAD:main; then
+              echo "✅ Push succeeded"
+              break
+            fi
+            attempts=$((attempts+1))
+            echo "⚠ Push failed (attempt $attempts). Fetching/rebasing and retrying..."
+            git fetch origin main
+            git pull --rebase origin main || true
+          done
+
+          if [ $attempts -ge 3 ]; then
+            echo "❌ Push failed after 3 attempts. Please check branch protection or permissions."
+            exit 1
+          fi
