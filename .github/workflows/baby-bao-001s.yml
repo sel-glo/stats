@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  split-baby-bao-001s-png:
+  split-baby-bao-001-png:
     runs-on: ubuntu-latest
 
     steps:
