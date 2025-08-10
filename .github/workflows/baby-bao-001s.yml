@@ -3,7 +3,7 @@ name: Split baby-bao-001.png
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 4 * * *'  # 07:00 صبح به وقت ترکیه (UTC 04:00)
+    - cron: '0 4 * * *'  # 07:00 صبح به وقت ترکیه
 
 permissions:
   contents: write
@@ -12,10 +12,18 @@ concurrency:
   group: split-sliced-queue
   cancel-in-progress: false
 
-jobs:
-  split-baby-bao-001-png:
-    runs-on: ubuntu-latest
+env:
+  CATEGORY: baby
+  SUBDIR: babyclothing
+  CODE: bb
+  STEM: bb-001
+  SCRIPT: scripts/baby/bb-001s.mjs
+  STAGE_GLOB: daily/baby/babyclothing/sliced/*.png
+  COMMIT_MSG: "Auto-split: update sliced images from bb-001.png"
 
+jobs:
+  split:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -23,61 +31,63 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Pull latest changes (pre-run)
+        run: |
+          git fetch origin main
+          git pull --rebase origin main || true
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install canvas dependencies
+      - name: Install canvas system deps
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 
-      - name: Install npm packages
-        run: npm install
+      - name: Install npm deps
+        run: npm install --no-audit --no-fund
 
-      - name: Run bao-001s splitter script
-        run: node scripts/baby/bao-001s.mjs
+      - name: Run splitter
+        run: node "$SCRIPT"
 
-      # ابتدا repo را با آخرین تغییرات main سینک کن تا تعارض پیش‌نیاد
-      - name: Pull latest changes (rebase)
+      - name: Pull latest changes (pre-push)
         run: |
           git fetch origin main
           git pull --rebase origin main || true
 
-      # فقط PNGهای sliced را استیج کن (نه node_modules و بقیه)
       - name: Stage sliced images only
+        shell: bash
         run: |
           git config user.name "selglo-bot"
           git config user.email "bot@selglo.com"
-          git add -- ':(glob)daily/baby/babyother/sliced/*.png'
-
+          git add -- ":(glob)$STAGE_GLOB"
           if git diff --cached --quiet; then
             echo "✅ No sliced images to commit"
             exit 0
           fi
-
-          echo "🔍 Staged files:"
+          echo "🔍 Staged:"
           git diff --cached --name-only
 
       - name: Commit and push with retry
+        shell: bash
         run: |
-          git commit -m "Auto-split: update sliced images from bao-001.png" || exit 0
+          git commit -m "$COMMIT_MSG" || exit 0
 
-          attempts=0
-          until [ $attempts -ge 3 ]
-          do
+          pushed=0
+          for attempt in 1 2 3; do
             if git push origin HEAD:main; then
               echo "✅ Push succeeded"
+              pushed=1
               break
             fi
-            attempts=$((attempts+1))
-            echo "⚠ Push failed (attempt $attempts). Rebase & retry..."
+            echo "⚠️ Push failed (attempt $attempt). Rebase & retry..."
             git fetch origin main
             git pull --rebase origin main || true
           done
 
-          if [ $attempts -ge 3 ]; then
-            echo "❌ Push failed after 3 attempts. Check branch protections/permissions."
+          if [ "$pushed" -ne 1 ]; then
+            echo "❌ Push failed after 3 attempts. Check branch protections."
             exit 1
           fi
