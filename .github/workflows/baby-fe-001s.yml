@@ -14,7 +14,7 @@ concurrency:
 
 env:
   CATEGORY: baby
-  SUBDIR: babyclothing
+  SUBDIR: feedingsupplies
   CODE: fe
   STEM: fe-001
   SCRIPT: scripts/baby/fe-001s.mjs
