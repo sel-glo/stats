@@ -1,0 +1,93 @@
+name: Split beauty-pe-001.png
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '42 4 * * *'  # 07:42 TRT، 3 دقیقه بعد از 07:39
+
+permissions:
+  contents: write
+
+concurrency:
+  group: split-sliced-queue
+  cancel-in-progress: false
+
+env:
+  CATEGORY: beauty
+  SUBDIR: perfume
+  CODE: pe
+  STEM: pe-001
+  SCRIPT: scripts/beauty/pe-001s.mjs
+  STAGE_GLOB: daily/beauty/perfume/sliced/*.png
+  COMMIT_MSG: "Auto-split: update sliced images from pe-001.png"
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Pull latest changes (pre-run)
+        run: |
+          git fetch origin main
+          git pull --rebase origin main || true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install canvas system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+
+      - name: Install npm deps
+        run: npm install --no-audit --no-fund
+
+      - name: Run splitter
+        run: node "$SCRIPT"
+
+      - name: Pull latest changes (pre-push)
+        run: |
+          git fetch origin main
+          git pull --rebase origin main || true
+
+      - name: Stage sliced images only
+        shell: bash
+        run: |
+          git config user.name "selglo-bot"
+          git config user.email "bot@selglo.com"
+          git add -- ":(glob)$STAGE_GLOB"
+          if git diff --cached --quiet; then
+            echo "✅ No sliced images to commit"
+            exit 0
+          fi
+          echo "🔍 Staged:"
+          git diff --cached --name-only
+
+      - name: Commit and push with retry
+        shell: bash
+        run: |
+          git commit -m "$COMMIT_MSG" || exit 0
+
+          pushed=0
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "✅ Push succeeded"
+              pushed=1
+              break
+            fi
+            echo "⚠️ Push failed (attempt $attempt). Rebase & retry..."
+            git fetch origin main
+            git pull --rebase origin main || true
+          done
+
+          if [ "$pushed" -ne 1 ]; then
+            echo "❌ Push failed after 3 attempts. Check branch protections."
+            exit 1
+          fi
