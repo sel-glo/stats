@@ -18,7 +18,7 @@ env:
   CODE: bc
   STEM: bc-001
   SCRIPT: scripts/baby/bc-001s.mjs
-  STAGE_GLOB: daily/baby/babyclothing/sliced/*.png
+  STAGE_GLOB: daily/baby/babycare/sliced/*.png
   COMMIT_MSG: "Auto-split: update sliced images from bc-001.png"
 
 jobs:
