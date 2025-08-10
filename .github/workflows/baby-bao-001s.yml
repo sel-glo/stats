@@ -14,11 +14,11 @@ concurrency:
 
 env:
   CATEGORY: baby
-  SUBDIR: babyclothing
+  SUBDIR: babyother
   CODE: bb
   STEM: bb-001
   SCRIPT: scripts/baby/bb-001s.mjs
-  STAGE_GLOB: daily/baby/babyclothing/sliced/*.png
+  STAGE_GLOB: daily/baby/babyother/sliced/*.png
   COMMIT_MSG: "Auto-split: update sliced images from bb-001.png"
 
 jobs:
