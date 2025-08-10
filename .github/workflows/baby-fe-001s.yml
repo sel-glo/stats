@@ -18,7 +18,7 @@ env:
   CODE: fe
   STEM: fe-001
   SCRIPT: scripts/baby/fe-001s.mjs
-  STAGE_GLOB: daily/baby/babyclothing/sliced/*.png
+  STAGE_GLOB: daily/baby/feedingsupplies/sliced/*.png
   COMMIT_MSG: "Auto-split: update sliced images from fe-001.png"
 
 jobs:
