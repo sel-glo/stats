@@ -9,8 +9,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
 // اگر ساختار پروژه فرق دارد، این‌ها را اصلاح کن
-const INPUT_PATH = path.join(__dirname, '..', '..', 'daily', 'clothingother', 'hats', 'ha-001.png');
-const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'clothingother', 'hats', 'sliced');
+const INPUT_PATH = path.join(__dirname, '..', '..', 'daily', 'clothing', 'hats', 'ha-001.png');
+const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'clothing', 'hats', 'sliced');
 
 // ===== تنظیمات (پیکسل واقعی تصویر) =====
 const startX_px = 15;    // شروع برش از لبه چپ (px)
