@@ -13,9 +13,9 @@ const INPUT_PATH = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother'
 const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother', 'sliced');
 
 // ===== تنظیمات (پیکسل واقعی تصویر) =====
-const startX_px = 10;    // شروع برش از لبه چپ (px)
+const startX_px = 0;    // شروع برش از لبه چپ (px)
 const endX_px   = 400;  // پایان برش (px)
-const startY_px = 10;    // شروع برش از بالا (px)
+const startY_px = 0;    // شروع برش از بالا (px)
 const itemCount = 100;  // تعداد آیتم‌ها
 
 // ===== گزینه‌های کمکی =====
