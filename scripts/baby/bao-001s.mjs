@@ -11,8 +11,8 @@ const OUTPUT_DIR = path.join(__dirname, '..', '..', 'daily', 'baby', 'babyother'
 
 // ===== تنظیمات (پیکسل واقعی تصویر) =====
 const startX_px  = 2;    // شروع برش از لبه چپ (px)
-const endX_px    = 410;  // پایان برش (px)
-const startY_px  = 2;    // شروع برش از بالا (px)
+const endX_px    = 380;  // پایان برش (px)
+const startY_px  = 5;    // شروع برش از بالا (px)
 const itemCount  = 100;  // تعداد آیتم‌ها
 // ======================================
 
