@@ -39,16 +39,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install deps
-        run: npm install
+          node-version: '20'   # بدون cache تا خطای lockfile نگیری
 
       - name: Install canvas system deps
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+
+      - name: Install npm deps
+        run: npm install --no-audit --no-fund
 
       - name: Run splitter
         run: node "$SCRIPT"
