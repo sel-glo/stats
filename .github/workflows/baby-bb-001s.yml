@@ -39,7 +39,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'   # بدون cache تا خطای lockfile نگیری
+          node-version: '20'
 
       - name: Install canvas system deps
         run: |
@@ -58,6 +58,7 @@ jobs:
           git pull --rebase origin main || true
 
       - name: Stage sliced images only
+        shell: bash
         run: |
           git config user.name "selglo-bot"
           git config user.email "bot@selglo.com"
@@ -70,20 +71,23 @@ jobs:
           git diff --cached --name-only
 
       - name: Commit and push with retry
+        shell: bash
         run: |
           git commit -m "$COMMIT_MSG" || exit 0
-          attempts=0
-          until [ $attempts -ge 3 ]
-          do
+
+          pushed=0
+          for attempt in 1 2 3; do
             if git push origin HEAD:main; then
               echo "✅ Push succeeded"
+              pushed=1
               break
             fi
-            attempts=$((attempts+1))
-            echo "⚠ Push failed (attempt $attempts). Rebase & retry..."
+            echo "⚠️ Push failed (attempt $attempt). Rebase & retry..."
             git fetch origin main
             git pull --rebase origin main || true
           done
-          if [ $attempts -ge 3 ]; then
+
+          if [ "$pushed" -ne 1 ]; then
             echo "❌ Push failed after 3 attempts. Check branch protections."
             exit 1
+          fi
