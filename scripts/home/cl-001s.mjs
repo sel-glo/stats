@@ -1,4 +1,4 @@
-// scripts/food/cl-001s.mjs
+// scripts/home/cl-001s.mjs
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
