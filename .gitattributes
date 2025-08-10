@@ -1,0 +1,26 @@
+* text=auto
+
+# خط پایان‌ها روی لینوکس درست باشند (از خطای \r\n در اکشن‌ها جلوگیری می‌کند)
+*.sh   text eol=lf
+*.bash text eol=lf
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.md   text eol=lf
+
+# تصاویر به‌صورت باینری (دایف نگیرد)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+
+# خروجی‌های sliced حتی اگر روزی LFS فعال شد، تحت LFS نروند (بی‌خطر حتی وقتی LFS نداریم)
+daily/**/sliced/*.png  -filter -diff -merge
+daily/**/sliced/*.jpg  -filter -diff -merge
+daily/**/sliced/*.webp -filter -diff -merge
+
+# (اختیاری) اگر روزی خواستی ورودی‌های *-001.png را با LFS نگه داری، این خط را از کامنت دربیار:
+# daily/**/*-001.png filter=lfs diff=lfs merge=lfs -text
