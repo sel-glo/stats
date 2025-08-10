@@ -3,7 +3,7 @@ name: Split baby-bao-001.png
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 5 * * *'  # 08:00 صبح به وقت ترکیه (UTC 05:00)
+    - cron: '0 4 * * *'  # 07:00 صبح به وقت ترکیه (UTC 04:00)
 
 permissions:
   contents: write
