@@ -19,7 +19,7 @@ env:
   STEM: bb-001
   SCRIPT: scripts/baby/bb-001s.mjs
   STAGE_GLOB: daily/baby/babyclothing/sliced/*.png
-  COMMIT_MSG: Auto-split: update sliced images from bb-001.png
+  COMMIT_MSG: "Auto-split: update sliced images from bb-001.png"
 
 jobs:
   split:
