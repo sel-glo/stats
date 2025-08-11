@@ -26,11 +26,19 @@ jobs:
             build-essential libcairo2-dev libpango1.0-dev \
             libjpeg-dev libgif-dev librsvg2-dev
 
-      - name: Setup Node & install
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci --no-audit --no-fund
+
+      - name: Install npm deps
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
 
       - name: Run all splits sequentially
         shell: bash
