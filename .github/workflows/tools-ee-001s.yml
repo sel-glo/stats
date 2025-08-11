@@ -3,7 +3,7 @@ name: Split tools-ee-001
 on:
   workflow_dispatch:
   schedule:
-    - cron: '10 14 * * *'  # 17:10 بعدازظهر به وقت ترکیه (TRT=UTC+3)
+    - cron: '00 14 * * *'  # 17:00 بعدازظهر به وقت ترکیه (TRT=UTC+3)
 
 permissions:
   contents: write
