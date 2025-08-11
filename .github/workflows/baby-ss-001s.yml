@@ -1,16 +1,12 @@
-name: Split baby-ss-001.png
+name: Split baby-ss-001
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '18 4 * * *'  # 07:18 TRT، 3 دقیقه بعد از 07:15
+    - cron: '30 4 * * *'  # 07:30 صبح به وقت ترکیه (TRT=UTC+3)
 
 permissions:
   contents: write
-
-concurrency:
-  group: split-sliced-queue
-  cancel-in-progress: false
 
 env:
   CATEGORY: baby
@@ -19,11 +15,12 @@ env:
   STEM: ss-001
   SCRIPT: scripts/baby/ss-001s.mjs
   STAGE_GLOB: daily/baby/strollers/sliced/*.png
-  COMMIT_MSG: "Auto-split: update sliced images from ss-001.png"
 
 jobs:
   split:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -31,7 +28,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      # برای کاهش هم‌پوشانی‌های لحظه‌ای
+      - name: Random jitter (10–40s)
+        shell: bash
+        run: sleep $((RANDOM % 30 + 10))
+
       - name: Pull latest changes (pre-run)
+        shell: bash
         run: |
           git fetch origin main
           git pull --rebase origin main || true
@@ -42,17 +45,50 @@ jobs:
           node-version: '20'
 
       - name: Install canvas system deps
+        shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+          sudo apt-get install -y \
+            build-essential libcairo2-dev libpango1.0-dev \
+            libjpeg-dev libgif-dev librsvg2-dev
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
 
       - name: Install npm deps
-        run: npm install --no-audit --no-fund
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      - name: Wait for input image (max ~5m)
+        shell: bash
+        run: |
+          INPUT="daily/$CATEGORY/$SUBDIR/${STEM}.png"
+          for i in {1..10}; do
+            if [ -f "$INPUT" ]; then
+              echo "✅ Found $INPUT"
+              break
+            fi
+            echo "⏳ Waiting for $INPUT ($i/10)…"
+            sleep 30
+          done
+          [ -f "$INPUT" ] || { echo "❌ Missing input $INPUT"; exit 1; }
 
       - name: Run splitter
+        shell: bash
         run: node "$SCRIPT"
 
       - name: Pull latest changes (pre-push)
+        shell: bash
         run: |
           git fetch origin main
           git pull --rebase origin main || true
@@ -70,24 +106,26 @@ jobs:
           echo "🔍 Staged:"
           git diff --cached --name-only
 
-      - name: Commit and push with retry
+      - name: Commit and push with retry (backoff)
         shell: bash
         run: |
+          COMMIT_MSG="Auto-split: ${CATEGORY}/${SUBDIR} from ${STEM}.png"
           git commit -m "$COMMIT_MSG" || exit 0
 
           pushed=0
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             if git push origin HEAD:main; then
               echo "✅ Push succeeded"
               pushed=1
               break
             fi
-            echo "⚠️ Push failed (attempt $attempt). Rebase & retry..."
+            echo "⚠️ Push failed (attempt $attempt). Rebase & retry after backoff..."
             git fetch origin main
             git pull --rebase origin main || true
+            sleep $(( attempt * 8 ))
           done
 
           if [ "$pushed" -ne 1 ]; then
-            echo "❌ Push failed after 3 attempts. Check branch protections."
+            echo "❌ Push failed after 5 attempts. Check branch protections."
             exit 1
           fi
