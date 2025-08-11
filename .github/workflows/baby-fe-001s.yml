@@ -93,4 +93,39 @@ jobs:
           git fetch origin main
           git pull --rebase origin main || true
 
-      - name: Stage sliced im
+      - name: Stage sliced images only
+        shell: bash
+        run: |
+          git config user.name "selglo-bot"
+          git config user.email "bot@selglo.com"
+          git add -- ":(glob)$STAGE_GLOB"
+          if git diff --cached --quiet; then
+            echo "✅ No sliced images to commit"
+            exit 0
+          fi
+          echo "🔍 Staged:"
+          git diff --cached --name-only
+
+      - name: Commit and push with retry (backoff)
+        shell: bash
+        run: |
+          COMMIT_MSG="Auto-split: ${CATEGORY}/${SUBDIR} from ${STEM}.png"
+          git commit -m "$COMMIT_MSG" || exit 0
+
+          pushed=0
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              echo "✅ Push succeeded"
+              pushed=1
+              break
+            fi
+            echo "⚠️ Push failed (attempt $attempt). Rebase & retry after backoff..."
+            git fetch origin main
+            git pull --rebase origin main || true
+            sleep $(( attempt * 8 ))
+          done
+
+          if [ "$pushed" -ne 1 ]; then
+            echo "❌ Push failed after 5 attempts. Check branch protections."
+            exit 1
+          fi
