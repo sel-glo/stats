@@ -1,0 +1,62 @@
+name: Split ALL (daily)
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # 23:00 TRT
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  split-all:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: System deps for canvas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential libcairo2-dev libpango1.0-dev \
+            libjpeg-dev libgif-dev librsvg2-dev
+
+      - name: Setup Node & install
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --no-audit --no-fund
+
+      - name: Run all splits sequentially
+        shell: bash
+        run: |
+          set -e
+          while IFS=, read -r CATEGORY SUBDIR CODE STEM SCRIPT; do
+            echo "===== [$CODE] $CATEGORY/$SUBDIR/$STEM ====="
+            # صبر تا ورودی ساخته شود (در صورت تاخیر generate)
+            for i in {1..20}; do
+              if [ -f "daily/$CATEGORY/$SUBDIR/${STEM}.png" ]; then break; fi
+              echo "waiting for daily/$CATEGORY/$SUBDIR/${STEM}.png …"
+              sleep 15
+            done
+            if [ ! -f "daily/$CATEGORY/$SUBDIR/${STEM}.png" ]; then
+              echo "❌ missing input: daily/$CATEGORY/$SUBDIR/${STEM}.png"
+              exit 1
+            fi
+            CATEGORY="$CATEGORY" SUBDIR="$SUBDIR" CODE="$CODE" STEM="$STEM" \
+              node "$SCRIPT"
+          done < scripts/split_manifest.csv
+
+      - name: Commit & push once
+        shell: bash
+        run: |
+          git config user.name "selglo-bot"
+          git config user.email "bot@selglo.com"
+          git add daily/**/sliced/*.png
+          git commit -m "Auto-split: all groups" || exit 0
+          git push origin HEAD:main
