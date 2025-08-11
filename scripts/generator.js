@@ -25,8 +25,31 @@ function getAllHtmlFiles(dir, fileList = []) {
 
 (async () => {
   const today = new Date();
-  const startDate = new Date('2025-07-01');
-  const daysPassed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+  // چرخه 6 ماهه تقویمی (ریپوی ماه 1)
+  const CYCLE_MONTHS = 6;
+  const START_ISO = '2025-01-01'; // برای ریپوهای بعدی فقط همین تاریخ عوض می‌شود
+
+  function addMonthsUTC(d, m) {
+    const dt = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    dt.setUTCMonth(dt.getUTCMonth() + m);
+    return dt;
+  }
+
+  function cycleProgress(startIso) {
+    const start = new Date(startIso + 'T00:00:00Z');
+    const now = new Date();
+    if (now < start) return 0;
+
+    let cycleStart = start;
+    let cycleEnd = addMonthsUTC(cycleStart, CYCLE_MONTHS);
+    while (cycleEnd <= now) {
+      cycleStart = cycleEnd;
+      cycleEnd = addMonthsUTC(cycleStart, CYCLE_MONTHS);
+    }
+    return (now - cycleStart) / (cycleEnd - cycleStart); // 0..1
+  }
+
+  const progress = cycleProgress(START_ISO);
 
   // محاسبه عدد شاخص بر اساس تاریخ روز
   const year = today.getFullYear() % 100;
@@ -223,7 +246,6 @@ function getAllHtmlFiles(dir, fileList = []) {
 
           const baseSold = 30 + (seed % 15);
           const maxSold = 980;
-          const progress = (daysPassed % 180) / 180;
           const sold = Math.floor(baseSold + (maxSold - baseSold) * progress);
 
           const weekly = Math.min(
