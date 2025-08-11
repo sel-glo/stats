@@ -1,7 +1,9 @@
 {
-  "name": "selglo-stats",
+  "name": "sel-glo-stats",
   "version": "1.0.0",
   "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
   "scripts": {
     "generate": "node scripts/generator.js",
 
