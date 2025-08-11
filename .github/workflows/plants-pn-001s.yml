@@ -3,7 +3,7 @@ name: Split plants-pn-001
 on:
   workflow_dispatch:
   schedule:
-    - cron: '15 12 * * *'  # 15:15 بعدازظهر به وقت ترکیه (TRT=UTC+3)
+    - cron: '20 12 * * *'  # 15:20 بعدازظهر به وقت ترکیه (TRT=UTC+3)
 
 permissions:
   contents: write
