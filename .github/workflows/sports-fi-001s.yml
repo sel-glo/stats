@@ -3,7 +3,7 @@ name: Split sports-fi-001
 on:
   workflow_dispatch:
   schedule:
-     - cron: '25 13 * * *'  # 16:25 بعدازظهر به وقت ترکیه (TRT=UTC+3)
+    - cron: '25 13 * * *'  # 16:25 بعدازظهر به وقت ترکیه (TRT=UTC+3)
 
 permissions:
   contents: write
