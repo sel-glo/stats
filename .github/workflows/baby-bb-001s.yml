@@ -15,12 +15,11 @@ env:
   STEM: bb-001
   SCRIPT: scripts/baby/bb-001s.mjs
   STAGE_GLOB: daily/baby/babyclothing/sliced/*.png
-  COMMIT_MSG: "Auto-split: update sliced images from bb-001.png"
 
 jobs:
   split:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repo
@@ -29,7 +28,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      # برای کاهش هم‌پوشانی اجرای موازی (به‌خصوص حوالی push)
+      # برای کاهش هم‌پوشانی‌های لحظه‌ای
       - name: Random jitter (10–40s)
         shell: bash
         run: sleep $((RANDOM % 30 + 10))
@@ -46,6 +45,7 @@ jobs:
           node-version: '20'
 
       - name: Install canvas system deps
+        shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -84,6 +84,7 @@ jobs:
           [ -f "$INPUT" ] || { echo "❌ Missing input $INPUT"; exit 1; }
 
       - name: Run splitter
+        shell: bash
         run: node "$SCRIPT"
 
       - name: Pull latest changes (pre-push)
@@ -108,6 +109,7 @@ jobs:
       - name: Commit and push with retry (backoff)
         shell: bash
         run: |
+          COMMIT_MSG="Auto-split: ${CATEGORY}/${SUBDIR} from ${STEM}.png"
           git commit -m "$COMMIT_MSG" || exit 0
 
           pushed=0
