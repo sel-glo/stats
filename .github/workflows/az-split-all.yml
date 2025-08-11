@@ -2,7 +2,7 @@ name: Split ALL (daily)
 
 on:
   schedule:
-    - cron: '0 8 * * *'   # 23:00 TRT
+    - cron: '0 16 * * *'   # 19:00 TRT
   workflow_dispatch:
 
 permissions:
