@@ -2,7 +2,7 @@ name: Split ALL (daily)
 
 on:
   schedule:
-    - cron: '0 16 * * *'   # 19:00 TRT
+    - cron: '0 16 * * *'   # 19:00 TRT (UTC+3)
   workflow_dispatch:
 
 permissions:
@@ -14,57 +14,86 @@ jobs:
     timeout-minutes: 180
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: System deps for canvas
+      - name: System deps for node-canvas
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential libcairo2-dev libpango1.0-dev \
             libjpeg-dev libgif-dev librsvg2-dev
 
-      - name: Setup Node
+      - name: Setup Node & install
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Install npm deps
-        shell: bash
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci --no-audit --no-fund
-          else
-            npm install --no-audit --no-fund
-          fi
+          npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
-      - name: Run all splits sequentially
+      - name: Preflight: manifest exists
+        run: |
+          test -f scripts/split_manifest.csv || { echo "❌ scripts/split_manifest.csv not found"; exit 1; }
+
+      - name: Run all splits sequentially (skip missing inputs)
         shell: bash
         run: |
           set -e
           while IFS=, read -r CATEGORY SUBDIR CODE STEM SCRIPT; do
             echo "===== [$CODE] $CATEGORY/$SUBDIR/$STEM ====="
-            # صبر تا ورودی ساخته شود (در صورت تاخیر generate)
-            for i in {1..20}; do
-              if [ -f "daily/$CATEGORY/$SUBDIR/${STEM}.png" ]; then break; fi
-              echo "waiting for daily/$CATEGORY/$SUBDIR/${STEM}.png …"
+
+            # منتظر آماده شدن ورودی (حداکثر 10 دقیقه = 40×15s)
+            for i in {1..40}; do
+              if [ -f "daily/$CATEGORY/$SUBDIR/${STEM}.png" ]; then
+                break
+              fi
+              echo "waiting for daily/$CATEGORY/$SUBDIR/${STEM}.png … ($i/40)"
               sleep 15
             done
+
+            # اگر هنوز ورودی نیست، فقط رد شو و ادامه بده
             if [ ! -f "daily/$CATEGORY/$SUBDIR/${STEM}.png" ]; then
-              echo "❌ missing input: daily/$CATEGORY/$SUBDIR/${STEM}.png"
-              exit 1
+              echo "⚠️ missing input → SKIP: daily/$CATEGORY/$SUBDIR/${STEM}.png"
+              continue
             fi
-            CATEGORY="$CATEGORY" SUBDIR="$SUBDIR" CODE="$CODE" STEM="$STEM" \
-              node "$SCRIPT"
+
+            # اجرای اسکریپت همان ردیف؛ اگر خطا داد، بقیه ادامه دهند
+            if ! CATEGORY="$CATEGORY" SUBDIR="$SUBDIR" CODE="$CODE" STEM="$STEM" node "$SCRIPT"; then
+              echo "⚠️ splitter failed for [$CODE] → continue"
+              continue
+            fi
           done < scripts/split_manifest.csv
+
+      - name: Pull latest changes (pre-push)
+        run: |
+          git fetch origin main
+          git pull --rebase origin main || true
 
       - name: Commit & push once
         shell: bash
         run: |
           git config user.name "selglo-bot"
           git config user.email "bot@selglo.com"
-          git add daily/**/sliced/*.png
-          git commit -m "Auto-split: all groups" || exit 0
-          git push origin HEAD:main
+          git add -- "daily/**/sliced/*.png"
+          if git diff --cached --quiet; then
+            echo "✅ No sliced images to commit"
+            exit 0
+          fi
+          git commit -m "Auto-split: all groups"
+
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "✅ Push succeeded"
+              exit 0
+            fi
+            echo "⚠️ Push failed (attempt $attempt). Rebase & retry…"
+            git fetch origin main
+            git pull --rebase origin main || true
+          done
+
+          echo "❌ Push failed after 3 attempts."
+          exit 1
